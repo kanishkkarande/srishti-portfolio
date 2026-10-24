@@ -1,0 +1,7 @@
+/*
+  Permissions-Policy: camera=(self), microphone=()
+  X-Content-Type-Options: nosniff
+/assets/*.mp4
+  Cache-Control: public, max-age=86400
+/assets/*.mind
+  Cache-Control: public, max-age=86400
