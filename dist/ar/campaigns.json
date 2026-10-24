@@ -1,0 +1,66 @@
+{
+  "ikea": {
+    "name": "Ikea",
+    "tagline": "Smarta \u2014 an idea for everyday life",
+    "poster": "assets/ikea.png",
+    "target": "assets/ikea.mind",
+    "video": "assets/ikea.mp4",
+    "fallback": "assets/ikea.mp4",
+    "targetWidth": 1866,
+    "targetHeight": 1048,
+    "rectangle": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "whiskas": {
+    "name": "Whiskas",
+    "tagline": "Food is a love language",
+    "poster": "assets/whiskas.png",
+    "target": "assets/whiskas.mind",
+    "video": "assets/whiskas.mp4",
+    "fallback": "assets/whiskas.mp4",
+    "targetWidth": 1856,
+    "targetHeight": 1040,
+    "rectangle": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "plot-twist": {
+    "name": "Canal+ \u00b7 Plot Twist",
+    "tagline": "Expect the unexpected",
+    "poster": "assets/plot-twist.png",
+    "target": "assets/plot-twist.mind",
+    "video": "assets/plot-twist.mp4",
+    "fallback": "assets/plot-twist.mp4",
+    "targetWidth": 1860,
+    "targetHeight": 1046,
+    "rectangle": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "wow-inheritance": {
+    "name": "WOW AD \u00b7 Inheritance",
+    "tagline": "An invitation to discover",
+    "poster": "assets/wow-inheritance.png",
+    "target": "assets/wow-inheritance.mind",
+    "video": "assets/wow-inheritance.mp4",
+    "fallback": "assets/wow-inheritance.mp4",
+    "targetWidth": 2056,
+    "targetHeight": 1160,
+    "rectangle": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  }
+}
