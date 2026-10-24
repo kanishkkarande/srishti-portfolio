@@ -4,3 +4,5 @@
 .texture-source{position:fixed;width:1px;height:1px;left:0;bottom:0;opacity:.01;pointer-events:none}#status:empty{display:none}.brand h2{max-width:75vw;font-size:clamp(20px,4vw,32px)}.card p{color:#c9cdc2;line-height:1.5;margin:0 0 24px}.brand{pointer-events:none}
 
 #sound{display:none!important}
+
+#viewer .back{display:none!important}

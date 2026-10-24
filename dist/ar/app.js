@@ -5,14 +5,14 @@ if(!c){
  $('#home header').hidden=true;
  $('#cards').innerHTML=Object.entries(campaigns).map(([id,c])=>`<a class="card" href="${id}/"><img src="${c.poster}" alt="${c.name} campaign"><h2>${c.name}</h2><p>${c.tagline}</p></a>`).join('');
 }else{
- $('#home').hidden=true;$('#viewer').hidden=false;$('#brand').textContent=c.name;
+ $('#home').hidden=true;$('#viewer').hidden=false;$('.back')?.remove();$('#brand').textContent=c.name;
  $('.brand h2').textContent=c.tagline;document.title=c.name+' — '+c.tagline;
  $('#sound')?.remove();$('#start').textContent='Start experience';
  const video=$('#film');video.removeAttribute('muted');video.defaultMuted=false;video.muted=false;video.volume=1;
  video.hidden=false;video.className='texture-source';video.crossOrigin='anonymous';video.preload='auto';video.src=c.video;video.poster=c.poster;video.load();
  let mind,texture,material,geometry,mesh,tracked=false,wantsPlay=true,starting=false,generation=0;
  const status=t=>$('#status').textContent=t;
- status('Tap Start experience, allow the camera, then point at the image. Audio is on.');
+ status('Opening camera… Allow access, then point at the image.');
  const play=async()=>{video.muted=false;video.volume=1;try{await video.play();video.dataset.audioBlocked='';$('#play').textContent='Pause';}catch(e){if(e.name==='NotAllowedError'){video.dataset.audioBlocked='true';status('Tap Play to start the campaign with audio.');$('#play').textContent='Play';}else status('Video is loading. Keep the page in view, or use Watch video directly.');}};
  const stop=()=>{
   generation++;tracked=false;video.pause();const instance=mind;mind=null;
@@ -23,7 +23,7 @@ if(!c){
   if(starting)return;starting=true;const token=++generation;$('#start').disabled=true;
   // Call play synchronously inside the human tap to authorise this same element's audio.
   video.muted=false;video.volume=1;
-  const audioUnlock=video.play().then(()=>{if(token===generation&&!tracked){video.pause();video.currentTime=0;}}).catch(e=>{if(e.name==='NotAllowedError')status('Your browser needs a Play tap to enable campaign audio.');});
+  const audioUnlock=video.play().then(()=>{if(token===generation&&!tracked){video.pause();video.currentTime=0;}}).catch(e=>{if(e.name==='NotAllowedError')video.dataset.audioBlocked='true';});
   try{
    if(!isSecureContext||!navigator.mediaDevices?.getUserMedia)throw Error('Use HTTPS in Safari or Chrome.');
    status('Loading camera and campaign…');
@@ -39,7 +39,7 @@ if(!c){
    anchor.onTargetLost=()=>{if(token!==generation)return;tracked=false;mesh.visible=false;video.pause();status('Point back at the image to continue.');};
    document.body.classList.add('ar');const instance=mind;await instance.start();if(token!==generation){instance.video?.srcObject?.getTracks().forEach(t=>t.stop());instance.controller?.stopProcessVideo();return;}
    let lastFrame=0;instance.renderer.setAnimationLoop(time=>{if(time-lastFrame<1000/30)return;lastFrame=time;if(mind===instance)instance.renderer.render(instance.scene,instance.camera);});
-   $('#start').hidden=true;$('#controls').hidden=false;$('#play').textContent=wantsPlay?'Pause':'Play';if(!tracked)status('Point at the '+c.name+' image.');
+   $('#start').hidden=true;$('#controls').hidden=false;$('#play').textContent=video.dataset.audioBlocked==='true'?'Play':wantsPlay?'Pause':'Play';if(!tracked)status('Point at the '+c.name+' image.');
    await audioUnlock;
   }catch(e){if(token!==generation)return;stop();status('Could not start the camera. '+(e?.message||'Check camera permission.')+' You can also watch the video directly.');}
   finally{if(token===generation){starting=false;$('#start').disabled=false;}}
@@ -51,4 +51,7 @@ if(!c){
  video.onerror=()=>status('Video could not load. Use Watch video directly.');
  $('#fallback').href=c.video;$('#fallback').onclick=stop;
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&mind)stop();});window.addEventListener('pagehide',stop);
+ // Enter the camera directly from each campaign QR URL; autoplay policies still apply.
+ $('#start').hidden=true;
+ $('#start').click();
 }
