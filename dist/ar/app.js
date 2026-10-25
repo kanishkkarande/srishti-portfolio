@@ -1,6 +1,7 @@
-import {trackingSettings,surfaceBounds,coverUV} from './surface.mjs?v=4';
+import {PoseStabilizer} from './pose-stabilizer.mjs?v=5';
+import {trackingSettings,surfaceBounds,coverUV} from './surface.mjs?v=5';
 const $=s=>document.querySelector(s);
-const campaigns=await fetch(new URL('campaigns.json',import.meta.url)).then(r=>r.json());
+const campaigns=await fetch(new URL('campaigns.json?v=5',import.meta.url)).then(r=>r.json());
 const slug=location.pathname.split('/').filter(Boolean).at(-1),c=campaigns[slug];
 if(!c){
  $('#home header').hidden=true;
@@ -11,14 +12,14 @@ if(!c){
  $('#sound')?.remove();$('#start').textContent='Start experience';
  const video=$('#film');video.removeAttribute('muted');video.defaultMuted=false;video.muted=false;video.volume=1;
  video.hidden=false;video.className='texture-source';video.crossOrigin='anonymous';video.preload='auto';video.src=c.video;video.poster=c.poster;video.load();
- let mind,texture,material,geometry,mesh,tracked=false,wantsPlay=true,starting=false,generation=0,cameraStream=null,resizeObserver=null;
+ let mind,texture,material,geometry,mesh,tracked=false,wantsPlay=true,starting=false,generation=0,cameraStream=null,resizeObserver=null,poseStabilizer=null,displayGroup=null;
  const status=t=>$('#status').textContent=t;
  const deadline=(promise,ms,message)=>{let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),ms);})]).finally(()=>clearTimeout(timer));};
  const cameraError=e=>({NotAllowedError:'Camera access is blocked. Allow Camera for this website in Safari or Chrome site settings, then tap Open camera.',NotFoundError:'No camera was found. Use a phone or connect a webcam.',NotReadableError:'The camera is busy or unavailable. Close other camera apps or tabs, then retry.',SecurityError:'Camera access is restricted by this browser. Open the link directly in Safari or Chrome.',OverconstrainedError:'This camera could not use the requested settings. Retry with the default camera.'}[e?.name]||e?.message||'Camera access failed. Open this link directly in Safari or Chrome.');
  status('Opening camera… Allow access, then point at the image.');
  const play=async()=>{video.muted=false;video.volume=1;try{await video.play();video.dataset.audioBlocked='';$('#play').textContent='Pause';}catch(e){if(e.name==='NotAllowedError'){video.dataset.audioBlocked='true';status('Tap Play to start the campaign with audio.');$('#play').textContent='Play';}else status('Video is loading. Keep the page in view, or use Watch video directly.');}};
  const stop=()=>{
-  generation++;tracked=false;resizeObserver?.disconnect();resizeObserver=null;video.pause();cameraStream?.getTracks().forEach(t=>t.stop());cameraStream=null;const instance=mind;mind=null;
+  generation++;tracked=false;resizeObserver?.disconnect();resizeObserver=null;poseStabilizer?.reset();poseStabilizer=null;displayGroup=null;video.pause();cameraStream?.getTracks().forEach(t=>t.stop());cameraStream=null;const instance=mind;mind=null;
   if(instance){instance.renderer.setAnimationLoop(null);instance.controller?.stopProcessVideo();instance.video?.srcObject?.getTracks().forEach(t=>t.stop());instance.video?.remove();instance.renderer.dispose();}
   texture?.dispose();material?.dispose();geometry?.dispose();$('#camera').replaceChildren();document.body.classList.remove('ar');$('#start').hidden=false;$('#controls').hidden=true;starting=false;$('#start').disabled=false;status('Camera closed. Tap Start experience to scan again.');
  };
@@ -52,14 +53,22 @@ if(!c){
    let bounds;
    const fitVideo=()=>{if(!bounds)return;const uv=coverUV(video.videoWidth/video.videoHeight,bounds.width/bounds.height);texture.repeat.set(uv.x,uv.y);texture.offset.set((1-uv.x)/2,(1-uv.y)/2);};
    video.onloadedmetadata=fitVideo;
-   const anchor=mind.addAnchor(0);anchor.group.add(mesh);
-   anchor.onTargetFound=()=>{if(token!==generation)return;tracked=true;mesh.visible=true;status('');if(wantsPlay&&!video.ended)play();};
-   anchor.onTargetLost=()=>{if(token!==generation)return;tracked=false;mesh.visible=false;video.pause();status('Point back at the image to continue.');};
+   const anchor=mind.addAnchor(0);
+   displayGroup=new THREE.Group();displayGroup.matrixAutoUpdate=false;displayGroup.visible=false;displayGroup.add(mesh);mind.scene.add(displayGroup);
+   // Read the genuine anchor pose, then stabilise its rigid transform before drawing.
+   anchor.onTargetUpdate=()=>{
+    if(token!==generation||!poseStabilizer||!tracked)return;
+    const filtered=poseStabilizer.update(anchor.group.matrix,performance.now());
+    if(filtered){const first=!displayGroup.visible;displayGroup.matrix.copy(filtered);displayGroup.matrixWorldNeedsUpdate=true;displayGroup.visible=true;if(first){status('');if(wantsPlay&&!video.ended)play();}}
+   };
+   anchor.onTargetFound=()=>{if(token!==generation)return;tracked=true;mesh.visible=true;status('Hold the image in view…');};
+   anchor.onTargetLost=()=>{if(token!==generation)return;tracked=false;mesh.visible=false;if(displayGroup)displayGroup.visible=false;poseStabilizer?.reset();video.pause();status('Point back at the image to continue.');};
    document.body.classList.add('ar');const instance=mind;await deadline(instance.start(),30000,'The camera is ready, but image tracking could not initialise. Tap Open camera to retry.');if(token!==generation){instance.video?.srcObject?.getTracks().forEach(t=>t.stop());instance.controller?.stopProcessVideo();return;}
    // Use dimensions from the actual .mind data, so geometry and pose use one reference.
    const [targetWidth,targetHeight]=instance.controller.markerDimensions[0];
    bounds=surfaceBounds(targetWidth,targetHeight,c.rectangle);
    mesh.scale.set(bounds.width,bounds.height,1);mesh.position.set(bounds.x,bounds.y,0);fitVideo();
+   poseStabilizer=new PoseStabilizer(THREE,instance.camera,bounds,()=>({width:$('#camera').clientWidth,height:$('#camera').clientHeight}));
    // Browser chrome and orientation can change the camera crop without a window resize.
    resizeObserver=new ResizeObserver(()=>{if(mind===instance)instance.resize();});resizeObserver.observe($('#camera'));
    // Render each display frame; tracking independently supplies the filtered pose.

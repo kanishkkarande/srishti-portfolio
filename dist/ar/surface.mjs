@@ -1,9 +1,9 @@
 // MindAR anchor units: target width = 1; target height retains the compiled aspect.
 export const trackingSettings = Object.freeze({
-  warmupTolerance: 6,
+  warmupTolerance: 4,
   missTolerance: 2,
-  filterMinCF: 0.001,
-  filterBeta: 10,
+  filterMinCF: 0.01,
+  filterBeta: 1000,
 });
 
 export function surfaceBounds(width, height, rect) {
@@ -14,9 +14,11 @@ export function surfaceBounds(width, height, rect) {
     throw new Error('The video rectangle must be inside the tracked image.');
   }
   const aspect = height / width;
+  const availableHeight = rect.height * aspect;
+  const fittedWidth = Math.min(rect.width, availableHeight * 16 / 9);
   return {
-    width: rect.width,
-    height: rect.height * aspect,
+    width: fittedWidth,
+    height: fittedWidth * 9 / 16,
     x: rect.x + rect.width / 2 - 0.5,
     y: (0.5 - rect.y - rect.height / 2) * aspect,
   };
