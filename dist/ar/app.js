@@ -1,7 +1,7 @@
 import {PoseStabilizer} from './pose-stabilizer.mjs?v=5';
 import {trackingSettings,surfaceBounds,coverUV} from './surface.mjs?v=5';
 const $=s=>document.querySelector(s);
-const campaigns=await fetch(new URL('campaigns.json?v=5',import.meta.url)).then(r=>r.json());
+const campaigns=await fetch(new URL('campaigns.json?v=6',import.meta.url)).then(r=>r.json());
 const slug=location.pathname.split('/').filter(Boolean).at(-1),c=campaigns[slug];
 if(!c){
  $('#home header').hidden=true;

@@ -38,12 +38,12 @@
   "plot-twist": {
     "name": "Canal+",
     "tagline": "Plot Twist. You go on a Vacation",
-    "poster": "assets/plot-twist-v5.jpg",
-    "target": "assets/plot-twist-v5.mind",
+    "poster": "assets/plot-twist-v6.png",
+    "target": "assets/plot-twist-v6.mind",
     "video": "assets/plot-twist-mobile-v2.mp4",
     "fallback": "assets/plot-twist-mobile-v2.mp4",
-    "targetWidth": 1280,
-    "targetHeight": 720,
+    "targetWidth": 1568,
+    "targetHeight": 882,
     "rectangle": {
       "x": 0,
       "y": 0,
